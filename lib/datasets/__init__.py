@@ -1,7 +1,6 @@
-import lib.datasets.stanford as stanford
-import lib.datasets.scannet as scannet
-import lib.datasets.kitti as kitti
+import lib.datasets.synapse as synapse
 import lib.datasets.ade20k as ade20k
+import lib.datasets.cityscapes as cityscapes
 DATASETS = []
 
 
@@ -9,10 +8,9 @@ def add_datasets(module):
   DATASETS.extend([getattr(module, a) for a in dir(module) if 'Dataset' in a])
 
 
-add_datasets(stanford)
-add_datasets(scannet)
-add_datasets(kitti)
+add_datasets(synapse)
 add_datasets(ade20k)
+add_datasets(cityscapes)
 
 def load_dataset(name):
   '''Creates and returns an instance of the datasets given its name.

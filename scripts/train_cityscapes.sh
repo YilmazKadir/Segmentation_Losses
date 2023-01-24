@@ -8,7 +8,7 @@ export PYTHONUNBUFFERED="True"
 export CUDA_VISIBLE_DEVICES=0
 export TIME=$(date +"%Y-%m-%d_%H-%M-%S")
 
-export DATASET=${DATASET:-ADE20KDataset}
+export DATASET=${DATASET:-CityScapesDataset}
 export MODEL=${MODEL:-UNet}
 export LR=${LR:-1e-2}
 export BATCH_SIZE=${BATCH_SIZE:-2}

@@ -14,11 +14,4 @@ __pycache__/
 
 # Training
 outputs/
-logs/
 
-# Profiling
-callgrind.out*
-*.dSYM
-
-# Misc
-.DS_Store

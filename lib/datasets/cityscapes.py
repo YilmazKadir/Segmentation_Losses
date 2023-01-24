@@ -6,23 +6,28 @@ from PIL import Image
 from albumentations.pytorch import ToTensorV2
 
 from lib.dataset import VoxelizationDataset
+from lib.utils import read_txt
 
 
-class ADE20KDataset(VoxelizationDataset):
+class CityScapesDataset(VoxelizationDataset):
     
   # Augmentation arguments
   NUM_IN_CHANNEL = 3
-  NUM_LABELS = 151
-  IGNORE_LABELS = (0,)
+  NUM_LABELS = 34
+  IGNORE_LABELS = (0,1,2,3,4,5,6,9,10,14,15,16,18,29,30)
 
   def __init__(self,
                config,
                augment_data=True,
                phase="train"):
-    data_root = config.ade20k_path
-    odgt_filepath = data_root + "/" + phase + ".odgt"
-    img_paths = [json.loads(x.rstrip())["fpath_img"] for x in open(odgt_filepath, 'r')]
-    seg_paths = [json.loads(x.rstrip())["fpath_segm"] for x in open(odgt_filepath, 'r')]
+    data_root = config.cityscapes_path
+    img_paths = read_txt("splits/cityscapes/" + phase + ".txt")
+    seg_paths=[]
+    for path in img_paths:
+      path = path.replace('leftImg8bit/', 'gtFine/')
+      path = path.replace('_leftImg8bit', '_gtFine_labelIds')
+      seg_paths.append(path)
+    
     logging.info('Loading {}: {}'.format(self.__class__.__name__, phase))
 
     if augment_data:
@@ -44,7 +49,7 @@ class ADE20KDataset(VoxelizationDataset):
       seg_paths,
       data_root=data_root,
       augmentations=augmentations,
-      ignore_mask=config.ignore_mask,
+      ignore_index=config.ignore_index,
       augment_data=augment_data,
       config=config)
     

@@ -17,7 +17,7 @@ import torch
 from config import get_config
 from lib.test import test
 from lib.train import train
-from lib.utils import get_torch_device, count_parameters
+from lib.utils import count_parameters
 from lib.dataset import initialize_data_loader
 from lib.datasets import load_dataset
 from models import load_model
@@ -39,7 +39,7 @@ def main():
 
   if config.is_cuda and not torch.cuda.is_available():
     raise Exception("No GPU found")
-  device = get_torch_device(config.is_cuda)
+  device = torch.device('cuda' if config.is_cuda else 'cpu')
 
   logging.info('===> Configurations')
   dconfig = vars(config)
@@ -57,11 +57,8 @@ def main():
         num_workers=config.num_workers,
         augment_data=True,
         shuffle=True,
-        repeat=True,
-        return_inverse=False,
-        merge=config.merge,
-        batch_size=config.batch_size,
-        limit_numpoints=config.train_limit_numpoints)
+        batch_size=config.batch_size)
+    
     val_data_loader = initialize_data_loader(
         DatasetClass,
         config,
@@ -69,17 +66,11 @@ def main():
         num_workers=config.num_val_workers,
         augment_data=False,
         shuffle=True,
-        repeat=False,
-        return_inverse=config.test_original_pc,
-        merge=False,
-        batch_size=config.val_batch_size,
-        limit_numpoints=False)
-    if train_data_loader.dataset.NUM_IN_CHANNEL is not None:
-      num_in_channel = train_data_loader.dataset.NUM_IN_CHANNEL
-    else:
-      num_in_channel = 3  # RGB color
-
+        batch_size=config.val_batch_size)
+    
+    num_in_channel = train_data_loader.dataset.NUM_IN_CHANNEL
     num_labels = train_data_loader.dataset.NUM_LABELS
+    
   else:
     test_data_loader = initialize_data_loader(
         DatasetClass,
@@ -93,11 +84,8 @@ def main():
         merge=False,
         batch_size=config.test_batch_size,
         limit_numpoints=False)
-    if test_data_loader.dataset.NUM_IN_CHANNEL is not None:
-      num_in_channel = test_data_loader.dataset.NUM_IN_CHANNEL
-    else:
-      num_in_channel = 3  # RGB color
-
+    
+    num_in_channel = test_data_loader.dataset.NUM_IN_CHANNEL
     num_labels = test_data_loader.dataset.NUM_LABELS
 
   logging.info('===> Building model')
@@ -112,7 +100,6 @@ def main():
   if config.weights.lower() != 'none':
     logging.info('===> Loading weights: ' + config.weights)
     state_dict = torch.load(config.weights)['state_dict']
-    del state_dict["final.kernel"], state_dict["final.bias"]
     for key in list(state_dict.keys()):
         state_dict[key.replace('model.', '')] = state_dict.pop(key)
     missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)

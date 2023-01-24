@@ -1,5 +1,4 @@
 torch # Or follow the pytorch installation instruction
-MinkowskiEngine
 torchvision
 
 # Image loading and plots

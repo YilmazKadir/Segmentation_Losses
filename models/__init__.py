@@ -1,4 +1,5 @@
 import models.unet_model as unet
+import models.resunet_model as resunet
 
 MODELS = []
 
@@ -8,6 +9,7 @@ def add_models(module):
 
 
 add_models(unet)
+add_models(resunet)
 
 def get_models():
   '''Returns a tuple of sample models.'''
