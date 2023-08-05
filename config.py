@@ -29,7 +29,7 @@ dir_arg.add_argument('--log_dir', type=str, default='outputs/default')
 
 # Data
 data_arg = add_argument_group('Data')
-data_arg.add_argument('--dataset', type=str, default='Cityscapes')
+data_arg.add_argument('--dataset', type=str, default='Synapse')
 data_arg.add_argument('--batch_size', type=int, default=2)
 data_arg.add_argument('--val_batch_size', type=int, default=2)
 data_arg.add_argument('--test_batch_size', type=int, default=2)
@@ -37,7 +37,7 @@ data_arg.add_argument('--num_workers', type=int, default=4)
 data_arg.add_argument('--num_val_workers', type=int, default=4)
 data_arg.add_argument('--ignore_index', type=int, default=255)
 data_arg.add_argument('--cityscapes_path',type=str,default='/images/PublicDataset/cityscapes')
-data_arg.add_argument('--synapse_path',type=str,default='/home/students/kyilmaz/project_TransUNet/data/Synapse')
+data_arg.add_argument('--synapse_path',type=str,default='./data/Synapse')
 
 # Training / test parameters
 train_arg = add_argument_group('Training')

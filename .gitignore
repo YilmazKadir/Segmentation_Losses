@@ -15,3 +15,5 @@ __pycache__/
 # Training
 outputs/
 logs/
+
+data/Synapse
