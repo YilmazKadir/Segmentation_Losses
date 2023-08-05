@@ -1,28 +1,15 @@
-import lib.datasets.synapse as synapse
-import lib.datasets.ade20k as ade20k
-import lib.datasets.cityscapes as cityscapes
-DATASETS = []
+from lib.datasets.synapse import SynapseDataset
+from lib.datasets.cityscapes import CityScapesDataset
 
 
-def add_datasets(module):
-  DATASETS.extend([getattr(module, a) for a in dir(module) if 'Dataset' in a])
+def get_dataset_by_name(dataset_name):
+    available_datasets = {
+        "synapse": SynapseDataset,
+        "cityscapes": CityScapesDataset,
+    }
 
-
-add_datasets(synapse)
-add_datasets(ade20k)
-add_datasets(cityscapes)
-
-def load_dataset(name):
-  '''Creates and returns an instance of the datasets given its name.
-  '''
-  # Find the model class from its name
-  mdict = {dataset.__name__: dataset for dataset in DATASETS}
-  if name not in mdict:
-    print('Invalid dataset index. Options are:')
-    # Display a list of valid dataset names
-    for dataset in DATASETS:
-      print('\t* {}'.format(dataset.__name__))
-    raise ValueError(f'Dataset {name} not defined')
-  DatasetClass = mdict[name]
-
-  return DatasetClass
+    if dataset_name.lower() not in available_datasets:
+        raise ValueError(f"Invalid dataset name. Available datasets are: {list(available_datasets.keys())}")
+    
+    dataset = available_datasets[dataset_name.lower()]
+    return dataset

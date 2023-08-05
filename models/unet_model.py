@@ -1,16 +1,15 @@
-""" Full assembly of the parts to form the complete network """
-
-from .unet_parts import *
+import torch.nn as nn
+from models.unet_modules import DoubleConv, Down, Up, OutConv
 
 
 class UNet(nn.Module):
-    def __init__(self, n_channels, n_classes, bilinear=False):
+    def __init__(self, in_channels, out_channels, bilinear=False):
         super(UNet, self).__init__()
-        self.n_channels = n_channels
-        self.n_classes = n_classes
+        self.n_channels = in_channels
+        self.n_classes = out_channels
         self.bilinear = bilinear
 
-        self.inc = DoubleConv(n_channels, 64)
+        self.inc = DoubleConv(in_channels, 64)
         self.down1 = Down(64, 128)
         self.down2 = Down(128, 256)
         self.down3 = Down(256, 512)
@@ -20,19 +19,7 @@ class UNet(nn.Module):
         self.up2 = Up(512, 256 // factor, bilinear)
         self.up3 = Up(256, 128 // factor, bilinear)
         self.up4 = Up(128, 64, bilinear)
-        self.outc = OutConv(64, n_classes)
-
-        # self.inc = DoubleConv(n_channels, 2)
-        # self.down1 = Down(2, 4)
-        # self.down2 = Down(4, 8)
-        # self.down3 = Down(8, 16)
-        # factor = 2 if bilinear else 1
-        # self.down4 = Down(16, 32 // factor)
-        # self.up1 = Up(32, 16 // factor, bilinear)
-        # self.up2 = Up(16, 8 // factor, bilinear)
-        # self.up3 = Up(8, 4 // factor, bilinear)
-        # self.up4 = Up(4, 2, bilinear)
-        # self.outc = OutConv(2, n_classes)
+        self.outc = OutConv(64, out_channels)
 
     def forward(self, x):
         x1 = self.inc(x)

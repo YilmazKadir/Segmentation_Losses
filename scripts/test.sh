@@ -8,11 +8,13 @@ export PYTHONUNBUFFERED="True"
 export CUDA_VISIBLE_DEVICES=0
 export TIME=$(date +"%Y-%m-%d_%H-%M-%S")
 
-export DATASET=${DATASET:-KITTIVoxelizationDataset}
-export MODEL=${MODEL:-Res16UNet34C}
-export BATCH_SIZE=${BATCH_SIZE:-4}
-export WEIGHTS=${WEIGHTS:-outputs/KITTIVoxelizationDataset/Res16UNet34C/AdamW-l1e-2-b4-OneCycleLR-i120000-/2022-11-03_00-55-53/checkpoint_Res16UNet34C.pth}
-export LOG_DIR=outputs/$DATASET/$MODEL/test/$TIME
+export DATASET=${DATASET:-Synapse}
+export MODEL=${MODEL:-ViT}
+export LR=${LR:-1e-2}
+export BATCH_SIZE=${BATCH_SIZE:-2}
+export MAX_EPOCHS=${MAX_EPOCHS:-50}
+
+export LOG_DIR=./outputs/$DATASET/$MODEL/l$LR-b$BATCH_SIZE-i$MAX_EPOCHS/$TIME
 
 # Save the experiment detail and dir to the common log file
 mkdir -p $LOG_DIR
@@ -24,9 +26,8 @@ python -m main \
     --log_dir $LOG_DIR \
     --dataset $DATASET \
     --model $MODEL \
+    --lr $LR \
     --batch_size $BATCH_SIZE \
-    --weights $WEIGHTS \
-    --test_original_pc True \
+    --max_epochs $MAX_EPOCHS \
     --test_phase val \
-    --normalize_color False \
     $3 2>&1 | tee -a "$LOG"

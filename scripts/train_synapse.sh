@@ -8,15 +8,13 @@ export PYTHONUNBUFFERED="True"
 export CUDA_VISIBLE_DEVICES=0
 export TIME=$(date +"%Y-%m-%d_%H-%M-%S")
 
-export DATASET=${DATASET:-ADE20KDataset}
-export MODEL=${MODEL:-UNet}
+export DATASET=${DATASET:-Synapse}
+export MODEL=${MODEL:-ViT}
 export LR=${LR:-1e-2}
 export BATCH_SIZE=${BATCH_SIZE:-2}
 export MAX_EPOCHS=${MAX_EPOCHS:-50}
-export WEIGHTS=${WEIGHTS:-None}
-# export RESUME=${RESUME:-./outputs/StanfordArea5Dataset/Res16UNet34C/AdamW-l1e-2-b4-OneCycleLR-i25000-/2022-09-29_15-50-45/}
 
-export LOG_DIR=./outputs/$DATASET/$MODEL/${OPTIMIZER}-l$LR-b$BATCH_SIZE-$SCHEDULER-i$MAX_EPOCHS/$TIME
+export LOG_DIR=./outputs/$DATASET/$MODEL/l$LR-b$BATCH_SIZE-i$MAX_EPOCHS/$TIME
 
 # Save the experiment detail and dir to the common log file
 mkdir -p $LOG_DIR
@@ -30,6 +28,4 @@ python -m main \
     --lr $LR \
     --batch_size $BATCH_SIZE \
     --max_epochs $MAX_EPOCHS \
-    --weights $WEIGHTS \
-    --val_freq 1000 \
     $3 2>&1 | tee -a "$LOG"

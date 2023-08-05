@@ -20,13 +20,13 @@
 ######################################################################
 
 # Shell script that you want to execute
-# cmd = /work/scratch/kyilmaz/Segmentation_Losses/scripts/train_ade20k.sh
+# cmd = /home/students/kyilmaz/Segmentation_Losses/scripts/train_synapse.sh
 
 # command line arguments
 
 # start directory
-# initialdir = /work/scratch/kyilmaz/Segmentation_Losses
-# remote_initialdir = /work/scratch/kyilmaz/Segmentation_Losses
+initialdir = /home/students/kyilmaz/Segmentation_Losses
+remote_initialdir = /home/students/kyilmaz/Segmentation_Losses
 
 # define output, error and log file
 output = logs/loc_$(cluster).$(Process)_out.log
@@ -79,11 +79,12 @@ nice_user = False
 # requirements = (GPURAM > 4000) && (GPURAM < 20000) && TARGET.Machine=="abacus.lfb.rwth-aachen.de"
 # Hint: Use (GPURAM > 5800) to match all GTX 1660 Super and GTX 1060
 # Example: (Use Workstation Pool, videocards with more then 5.8 GB but less then 16 GB VRAM and exclude all RTX 3090)
-requirements = (GPURAM > 11000) && TARGET.Machine=="abacus.lfb.rwth-aachen.de"
+requirements = (GPURAM > 10000) 
+# && TARGET.Machine=="maxwell.lfb.rwth-aachen.de"
 
 
 # required number of CPU cores
-request_cpus = 1
+request_cpus = 4
 
 # required number of GPUs
 request_gpus = 1

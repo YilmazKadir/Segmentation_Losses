@@ -1,26 +1,16 @@
-import torch.multiprocessing as mp
-try:
-  mp.set_start_method('forkserver')  # Reuse process created
-except RuntimeError:
-  pass
-
 import os
 import sys
 import json
 import logging
-from easydict import EasyDict as edict
-
-# Torch packages
 import torch
-
-# Train deps
+from easydict import EasyDict as edict
 from config import get_config
 from lib.test import test
 from lib.train import train
 from lib.utils import count_parameters
-from lib.dataset import initialize_data_loader
-from lib.datasets import load_dataset
-from models import load_model
+from torch.utils.data import DataLoader
+from lib.datasets import get_dataset_by_name
+from models import get_model_by_name
 
 ch = logging.StreamHandler(sys.stdout)
 logging.getLogger().setLevel(logging.INFO)
@@ -31,87 +21,61 @@ logging.basicConfig(
 
 
 def main():
-  config = get_config()
-  if config.resume:
-    json_config = json.load(open(config.resume + '/config.json', 'r'))
-    json_config['resume'] = config.resume
-    config = edict(json_config)
+    config = get_config()
+    if config.resume:
+        json_config = json.load(open(config.resume + '/config.json', 'r'))
+        json_config['resume'] = config.resume
+        config = edict(json_config)
 
-  if config.is_cuda and not torch.cuda.is_available():
-    raise Exception("No GPU found")
-  device = torch.device('cuda' if config.is_cuda else 'cpu')
+    if config.is_cuda and not torch.cuda.is_available():    
+        raise Exception("No GPU found")
+    device = torch.device('cuda' if config.is_cuda else 'cpu')
 
-  logging.info('===> Configurations')
-  dconfig = vars(config)
-  for k in dconfig:
-    logging.info('    {}: {}'.format(k, dconfig[k]))
+    logging.info('===> Configurations')
+    dconfig = vars(config)
+    for k in dconfig:
+        logging.info('    {}: {}'.format(k, dconfig[k]))
 
-  DatasetClass = load_dataset(config.dataset)
+    DatasetClass = get_dataset_by_name(config.dataset)
     
-  logging.info('===> Initializing dataloader')
-  if config.is_train:
-    train_data_loader = initialize_data_loader(
-        DatasetClass,
-        config,
-        phase=config.train_phase,
-        num_workers=config.num_workers,
-        augment_data=True,
-        shuffle=True,
-        batch_size=config.batch_size)
+    logging.info('===> Initializing dataloader')
+    if config.is_train:
+        train_dataset = DatasetClass(config, phase=config.train_phase)
+        train_data_loader = DataLoader(dataset=train_dataset,
+                                       num_workers=config.num_workers,
+                                       batch_size=config.batch_size,
+                                       shuffle=True)
+        val_dataset = DatasetClass(config, phase=config.val_phase)
+        val_data_loader = DataLoader(dataset=val_dataset,
+                                     num_workers=config.num_val_workers,
+                                     batch_size=config.val_batch_size,
+                                     shuffle=False)
+        
+        num_in_channel = train_data_loader.dataset.NUM_IN_CHANNEL
+        num_labels = train_data_loader.dataset.NUM_LABELS
     
-    val_data_loader = initialize_data_loader(
-        DatasetClass,
-        config,
-        phase=config.val_phase,
-        num_workers=config.num_val_workers,
-        augment_data=False,
-        shuffle=True,
-        batch_size=config.val_batch_size)
-    
-    num_in_channel = train_data_loader.dataset.NUM_IN_CHANNEL
-    num_labels = train_data_loader.dataset.NUM_LABELS
-    
-  else:
-    test_data_loader = initialize_data_loader(
-        DatasetClass,
-        config,
-        phase=config.test_phase,
-        num_workers=config.num_workers,
-        augment_data=False,
-        shuffle=False,
-        repeat=False,
-        return_inverse=config.test_original_pc,
-        merge=False,
-        batch_size=config.test_batch_size,
-        limit_numpoints=False)
-    
-    num_in_channel = test_data_loader.dataset.NUM_IN_CHANNEL
-    num_labels = test_data_loader.dataset.NUM_LABELS
+    else:
+        test_dataset = DatasetClass(config, phase=config.test_phase)
+        test_data_loader = DataLoader(dataset=test_dataset,
+                                      num_workers=config.num_val_workers,
+                                      batch_size=config.test_batch_size,
+                                      shuffle=False)
+            
+        num_in_channel = test_data_loader.dataset.NUM_IN_CHANNEL
+        num_labels = test_data_loader.dataset.NUM_LABELS
 
-  logging.info('===> Building model')
-  NetClass = load_model(config.model)
-  model = NetClass(num_in_channel, num_labels)
-  logging.info('===> Number of trainable parameters: {}: {}'.format(NetClass.__name__, count_parameters(model)))
-  logging.info(model)
-  logging.info('===> Model is on device: {}'.format(device))
-  model = model.to(device)
+    logging.info('===> Building model')
+    model = get_model_by_name(config.model, in_channels=num_in_channel, out_channels=num_labels)
+    logging.info('===> Number of trainable parameters: {}: {}'.format(config.model, count_parameters(model)))
+    logging.info(model)
+    logging.info('===> Model is on device: {}'.format(device))
+    model = model.to(device)
 
-  # Load weights if specified by the parameter.
-  if config.weights.lower() != 'none':
-    logging.info('===> Loading weights: ' + config.weights)
-    state_dict = torch.load(config.weights)['state_dict']
-    for key in list(state_dict.keys()):
-        state_dict[key.replace('model.', '')] = state_dict.pop(key)
-    missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
-    print("Missing keys: ", missing_keys)
-    print("Unexpected keys: ", unexpected_keys)
-
-  if config.is_train:
-    train(model, train_data_loader, val_data_loader, config)
-  else:
-    test(model, test_data_loader, config)
+    if config.is_train:
+        train(model, train_data_loader, val_data_loader, config)
+    else:
+        test(model, test_data_loader, config)
 
 
 if __name__ == '__main__':
-  __spec__ = None
-  main()
+    main()

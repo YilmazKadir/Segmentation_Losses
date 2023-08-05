@@ -1,61 +1,60 @@
-import logging
 import numpy as np
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-
-from lib.dataset import VoxelizationDataset
+from torch.utils.data import Dataset
 from lib.utils import read_txt
+from pathlib import Path
 
 
-class SynapseDataset(VoxelizationDataset):
-  NUM_IN_CHANNEL = 1
-  NUM_LABELS = 9
-  IGNORE_LABELS = ()
+class SynapseDataset(Dataset):
+    NUM_IN_CHANNEL = 1
+    NUM_LABELS = 9
+    IGNORE_LABELS = (0,)
 
-  def __init__(self,
-               config,
-               augment_data=True,
-               return_inverse=False,
-               phase="train"):
-    data_root = config.synapse_path
-    img_paths = read_txt("splits/synapse/" + phase + ".txt")
-    logging.info('Loading {}: {}'.format(self.__class__.__name__, phase))
+    def __init__(self, config, phase="train"):
+        self.ignore_index = config.ignore_index
+        self.data_root = Path(config.synapse_path)
+        self.img_paths = read_txt("splits/synapse/" + phase + ".txt")
+        if phase == config.train_phase:
+            self.augmentations = A.Compose([
+                A.RandomRotate90(),
+                A.Rotate(limit=20),
+                A.HorizontalFlip(),
+                ToTensorV2(),
+                ])
+        else:
+            self.augmentations = A.Compose([
+                ToTensorV2(),
+                ])
+        
+        # map labels not evaluated to ignore_label
+        label_map = {}
+        n_used = 0
+        for l in range(self.NUM_LABELS):
+            if l in self.IGNORE_LABELS:
+                label_map[l] = self.ignore_index
+            else:
+                label_map[l] = n_used
+                n_used += 1
+        label_map[self.ignore_index] = self.ignore_index
+        self.label_map = label_map
+        self.NUM_LABELS -= len(self.IGNORE_LABELS)
 
-    if augment_data:
-      augmentations = A.Compose([
-        A.RandomRotate90(),
-        A.Rotate(limit=20),
-        A.HorizontalFlip(),
-        ToTensorV2() ,
-      ])
-    else:
-      augmentations = A.Compose([
-        ToTensorV2(),
-      ])
-    
-    super().__init__(
-      img_paths,
-      None,
-      data_root=data_root,
-      augmentations=augmentations,
-      ignore_mask=config.ignore_mask,
-      return_inverse=return_inverse,
-      augment_data=augment_data,
-      config=config)
-  
-  def load_data(self, index):
-    filepath = self.img_paths[index]
-    data = np.load(self.data_root / filepath)
-    img, seg = data['image'], data['label']
-    # img = Image.open(img_path).convert('RGB')
-    # seg = Image.open(seg_path)
-    # img = img.resize((480,640), resample=Image.BILINEAR)
-    # seg = seg.resize((480,640), resample=Image.NEAREST)
-    return img, seg
-  
-  def get_classnames(self):
-    classnames = [
-      'wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window',
-      'bookshelf', 'picture', 'counter', 'desk', 'curtain', 'refrigerator',
-      'shower curtain', 'toilet', 'sink', 'bathtub', 'otherfurniture']
-    return classnames
+    def __len__(self):
+        return len(self.img_paths)
+
+    def __getitem__(self, index):
+        filepath = self.img_paths[index]
+        data = np.load(self.data_root / filepath)
+        img, seg = data['image'], data['label']
+        seg = np.vectorize(self.label_map.__getitem__)(seg)
+        if np.all(seg == self.ignore_index):
+            return self.__getitem__(np.random.randint(self.__len__()))
+        if self.augmentations is not None:
+            augmented  = self.augmentations(image=img, mask=seg)
+            img, seg  = augmented["image"], augmented["mask"]
+        return img, seg
+
+    def get_classnames(self):
+        return ["Aorta", "Gallbladder", "Left-Kidney", "Right-Kidney", "Liver", "Pancreas",
+                "Spleen", "Stomach"]

@@ -6,17 +6,17 @@ from models.resunet_modules import ResidualConv, Upsample
 
 
 class ResUNet(nn.Module):
-    def __init__(self, in_ch, out_ch, filters=[64, 128, 256, 512]):
+    def __init__(self, in_channels, out_channels, filters=[64, 128, 256, 512]):
         super(ResUNet, self).__init__()
 
         self.input_layer = nn.Sequential(
-            nn.Conv2d(in_ch, filters[0], kernel_size=3, padding=1),
+            nn.Conv2d(in_channels, filters[0], kernel_size=3, padding=1),
             nn.BatchNorm2d(filters[0]),
             nn.ReLU(),
             nn.Conv2d(filters[0], filters[0], kernel_size=3, padding=1),
         )
         self.input_skip = nn.Sequential(
-            nn.Conv2d(in_ch, filters[0], kernel_size=3, padding=1)
+            nn.Conv2d(in_channels, filters[0], kernel_size=3, padding=1)
         )
 
         self.residual_conv_1 = ResidualConv(filters[0], filters[1], 2, 1)
@@ -34,7 +34,7 @@ class ResUNet(nn.Module):
         self.up_residual_conv3 = ResidualConv(filters[1] + filters[0], filters[0], 1, 1)
 
         self.output_layer = nn.Sequential(
-            nn.Conv2d(filters[0], out_ch, 1, 1),
+            nn.Conv2d(filters[0], out_channels, 1, 1),
         )
 
     def forward(self, x):
