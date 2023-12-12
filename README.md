@@ -16,6 +16,8 @@ It quantifies the difference between the predicted segmentation and the ground t
 </div>
 
 
+🔥🔥 Our survey paper on arXiv: [Loss Functions in the Era of Semantic Segmentation: A Survey and Outlook](https://arxiv.org/abs/2312.05391)🔥🔥
+
 # <p align=center>`Awesome Loss Functions in Semantic Segmentation`</p>
 
 A curated list of awesome loss functions in semantic segmentation. This repo supplements our survey paper. We intend to continuously update it. We strongly encourage authors of relevant works to make a pull request and add their paper's information.
