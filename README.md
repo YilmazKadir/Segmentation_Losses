@@ -12,7 +12,7 @@ It quantifies the difference between the predicted segmentation and the ground t
 
 
 <div align='center'>
-<img src="Loss_Toxonomy.png" width="60%" height="60%">
+<img src="Loss_Taxonomy.png" width="60%" height="60%">
 </div>
 
 
