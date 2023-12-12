@@ -21,6 +21,8 @@ It quantifies the difference between the predicted segmentation and the ground t
 A curated list of awesome loss functions in semantic segmentation. This repo supplements our survey paper. We intend to continuously update it. We strongly encourage authors of relevant works to make a pull request and add their paper's information.
 ____
 
+## How to Use
+
 ## Citation
 
 If you find our work useful in your research, please consider citing:
